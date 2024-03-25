@@ -89,6 +89,7 @@ function Edit() {
   function handleDeleteClick() {
     //open an alert or modal to ask user if they're sure because this will delete relationships too
     //upon clicking ok on that modal, delete the node and relationships attached to it (not yet at the database because database mutation should only happen upon submit)
+    setIsDeleteModalOpen(true);
   }
 
   return (
@@ -174,7 +175,7 @@ function Edit() {
           setIsModuleModalVisible={setIsAddingModule}
         />
       )}
-      {isDeleteModalOpen && <DeleteModal />}
+      {isDeleteModalOpen && <DeleteModal open={isDeleteModalOpen} setOpen={setIsDeleteModalOpen}/>}
     </>
   );
 }
