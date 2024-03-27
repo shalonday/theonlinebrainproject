@@ -12,6 +12,7 @@ function DeleteModal({open, setOpen, currentNode, setCurrentTree}) {
       };
       return newTree;
     });
+    setOpen(false);
   }
   return <AlertDialog open={open} setOpen={setOpen} negBtnText={"I Changed My Mind"} posBtnText={"Delete"} onNegBtnClick={handleNegBtnClick} onPosBtnClick = {handlePosBtnClick}>
     OBP doesn&apos;t allow submission of branches with hanging module nodes, but you can
