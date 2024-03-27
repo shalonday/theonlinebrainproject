@@ -91,7 +91,7 @@ function Edit() {
     //upon clicking ok on that modal, delete the node and relationships attached to it (not yet at the database because database mutation should only happen upon submit)
     setIsDeleteModalOpen(true);
   }
-
+  
   return (
     <>
       <div className={styles.inputDiv}>
@@ -175,7 +175,7 @@ function Edit() {
           setIsModuleModalVisible={setIsAddingModule}
         />
       )}
-      {isDeleteModalOpen && <DeleteModal open={isDeleteModalOpen} setOpen={setIsDeleteModalOpen}/>}
+      {isDeleteModalOpen && <DeleteModal open={isDeleteModalOpen} setOpen={setIsDeleteModalOpen} currentNode={currentNode} setCurrentTree={setCurrentTree}/>}
     </>
   );
 }
