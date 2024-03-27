@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-export default function AlertDialog({open, setOpen, negBtnText, posBtnText, children}) {
+export default function AlertDialog({open, setOpen, negBtnText, posBtnText, onNegBtnClick, onPosBtnClick, children}) {
 
   const handleClose = () => {
     setOpen(false);
@@ -29,8 +29,8 @@ export default function AlertDialog({open, setOpen, negBtnText, posBtnText, chil
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>{negBtnText}</Button>
-          <Button variant="outlined" onClick={handleClose}>
+          <Button variant="outlined" onClick={onNegBtnClick}>{negBtnText}</Button>
+          <Button variant="outlined" onClick={onPosBtnClick}>
             {posBtnText}
           </Button>
         </DialogActions>
