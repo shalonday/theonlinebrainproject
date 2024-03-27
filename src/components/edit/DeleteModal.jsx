@@ -2,7 +2,7 @@ import AlertDialog from "../AlertDialog";
 
 function DeleteModal({open, setOpen}) {
   function handleNegBtnClick(){
-    console.log('negbtnclick')
+    setOpen(false);
   }
   function handlePosBtnClick(){
     console.log('posbtnclick')
