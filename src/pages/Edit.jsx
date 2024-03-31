@@ -70,7 +70,7 @@ function Edit() {
           setCurrentTree(draftBranch);
         } else if (universalTree) {
           // set displayed tree to nodes in param
-          setCurrentTree(getNodesById(nodeIds, universalTree));
+          setCurrentTree(getRootedNodes(nodeIds, universalTree));
         }
       }
       setDisplayedTree();
@@ -201,14 +201,12 @@ const ToolButton = styled.button`
 `;
 
 // String, Tree -> Tree (nodes only)
-// get nodes by id without fetching from db
-function getNodesById(nodeIdString, tree) {
-  if (nodeIdString === "blank") return { nodes: [], links: [] };
-  else {
+// rooted nodes are nodes that are connected to the universalTree
+function getRootedNodes(nodeIdString, tree) {
     const idsArray = nodeIdString.split(",");
     const nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
-    return { nodes: nodesArray, links: [] };
-  }
+    return { nodes: nodesArray, links: [], rootedNodes:idsArray };
+  
 }
 
 export default Edit;

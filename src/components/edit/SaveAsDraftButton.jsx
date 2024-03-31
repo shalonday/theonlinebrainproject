@@ -38,6 +38,7 @@ function SaveAsDraftButton({ state = null, currentTree, branchTitle }) {
       linkIds: currentTree.links.map((link) => link.id),
       author_id: user.id,
       status: "draft",
+      rootedNodes: currentTree.rootedNodes
     };
 
     // for each link and new module, add author_id if it doesn't exist  yet (nodes should already have authors added in AddNodeSection)

@@ -7,6 +7,7 @@ function DeleteModal({open, setOpen, currentNode, setCurrentTree}) {
   function handlePosBtnClick(){
     setCurrentTree((tree) => {
       const newTree = {
+        ...tree,
         nodes: tree.nodes.filter(node => node.id !== currentNode.id ),
         links: tree.links.filter(link => link.source !== currentNode.id && link.target !== currentNode.id), // filter out the links that have this node as target or as source (otherwise D3 will complain)
       };

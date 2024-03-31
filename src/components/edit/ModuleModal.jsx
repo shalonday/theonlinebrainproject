@@ -157,13 +157,14 @@ function ModuleModal({
       isPrerequisiteToLinksToDelete.concat(teachesLinksToDelete);
 
     setCurrentTree((tree) => {
-      const newTree = {
+      const newTree = { 
+        ...tree, // any other keys within the tree should stay the same
         nodes: tree.nodes
           .map((node) => (node.id === moduleId ? updatedModule : node)) // add this updated module
           .concat(newNodes),
         links: tree.links
           .filter((link) => !linksToDelete.map((i) => i.id).includes(link.id))
-          .concat(newLinks),
+          .concat(newLinks)
       };
       return newTree;
     });
