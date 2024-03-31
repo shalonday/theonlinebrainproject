@@ -52,12 +52,14 @@ function SaveAsDraftButton({ state = null, currentTree, branchTitle }) {
         !link.author_id ? { ...link, author_id: user.id } : link
       );
 
-    await mutateDraftNodes(
-      currentTree.nodes.map((node) => {
-        const { fx, fy, index, vx, vy, x, y, created_at, ...rest } = node;
-        return rest; // remove keys that we don't want to save
-      })
-    );
+    const draftNodesByThisUser = currentTree.nodes.filter(node => 
+      node.author_id === user.id
+    ).map((node) => {
+      const { fx, fy, index, vx, vy, x, y, created_at, ...rest } = node;
+      return rest; // remove keys that we don't want to save
+    })
+
+    await mutateDraftNodes(draftNodesByThisUser);
     await mutateDraftLinks(linksWithAuthors);
     await mutateDraftBranch(draftBranch);
 
