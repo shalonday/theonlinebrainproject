@@ -23,6 +23,7 @@ import MainTextSection from "./module-modal/MainTextSection";
 import { getObjectiveNodes, getPrerequisiteNodes, uuidv4 } from "../../utils";
 import Loader from "../Loader";
 import { useUser } from "../../hooks/useUser";
+import AlertDialog from "../AlertDialog";
 
 function ModuleModal({
   moduleToUpdate = null,
@@ -59,9 +60,16 @@ function ModuleModal({
   );
   const { user } = useUser();
 
+  const [errorMessage, setErrorMessage] = useState('')
+
   // Add module, skill nodes (prereq and objective), and links to currentTree
   function handleSubmit(e) {
     e.preventDefault();
+
+    const isSubmissionValid = validateSubmission();
+    if (!isSubmissionValid) {
+      return
+    }
 
     const newPrereqNodes = prerequisiteNodes.filter(
       (node) =>
@@ -85,6 +93,32 @@ function ModuleModal({
 
     // close the modal
     setIsModuleModalVisible(false);
+  }
+
+
+  function validateSubmission(){
+    setErrorMessage("")
+    let isValid = true;
+    
+    if (!prerequisiteNodes.length > 0){
+      isValid = false
+      setErrorMessage("There should be at least one prerequisite node.")
+      setIsAlertOpen(true)
+    }
+    
+    if (!objectiveNodes.length > 0){
+      isValid = false
+      setErrorMessage("There should be at least one objective node.")
+      setIsAlertOpen(true)
+    }
+    
+    if (learnText.length === 0 && practiceText.length === 0){
+      isValid = false
+      setErrorMessage("At least one of Learn and Practice should have text content.")
+      setIsAlertOpen(true)
+    }
+
+    return isValid
   }
 
   function submitUpdatedModule(newNodes) {
@@ -217,9 +251,10 @@ function ModuleModal({
     e.preventDefault();
     setIsModuleModalVisible(false);
   }
-
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
   return (
     <Suspense fallback={<Loader />}>
+      <AlertDialog open={isAlertOpen} setOpen={setIsAlertOpen} title="Error" negBtnText="Close" posBtnText="Ok" onNegBtnClick={()=>setIsAlertOpen(false)} onPosBtnClick={()=>setIsAlertOpen(false)}>Error: {errorMessage}</AlertDialog>
       <form className={styles.form}>
         <div className={styles.exitDiv}>
           <button onClick={handleExit} style={{ cursor: "pointer" }}>
