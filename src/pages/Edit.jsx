@@ -204,9 +204,12 @@ const ToolButton = styled.button`
 // rooted nodes are nodes that are connected to the universalTree
 function getRootedNodes(nodeIdString, tree) {
     const idsArray = nodeIdString.split(",");
-    const nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
-    return { nodes: nodesArray, links: [], rootedNodes:idsArray };
-  
+    let nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
+    nodesArray = nodesArray.map(node => {
+      return {...node, isRooted: true}
+    })
+
+    return { nodes: nodesArray, links: [] };
 }
 
 export default Edit;

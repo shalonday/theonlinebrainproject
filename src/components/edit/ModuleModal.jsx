@@ -58,6 +58,9 @@ function ModuleModal({
   const [resourcesArray, setResourcesArray] = useState(
     moduleToUpdate?.resources_array ? moduleToUpdate.resources_array : []
   );
+
+  const isModuleRooted = prerequisiteNodes.some(node => node.isRooted === true)
+
   const { user } = useUser();
 
   const [errorMessage, setErrorMessage] = useState('')
@@ -78,12 +81,18 @@ function ModuleModal({
           .includes(node.id)
     );
 
-    const newTargetNodes = objectiveNodes.filter(
+    const newTargetNodes = objectiveNodes.filter( // filter the new nodes
       (node) =>
         !currentTree.nodes
           .map((existingNode) => existingNode.id)
           .includes(node.id)
-    );
+    ).map(node => { // add isRooted property to new nodes. We assume that all preexisting objectiveNodes are already rooted (otherwise they wouldnt be in the universalTree)  
+      //if module isRooted then ALL newTargetNodes isRooted = true. 
+      return {...node, isRooted:isModuleRooted}
+    });
+
+    console.log(isModuleRooted)
+    console.log(newTargetNodes)
 
     if (moduleToUpdate) {
       submitUpdatedModule(newPrereqNodes.concat(newTargetNodes));
@@ -129,6 +138,7 @@ function ModuleModal({
       learnText: learnText,
       practiceText: practiceText,
       resources_array: resourcesArray,
+      isRooted: isModuleRooted
     };
 
     // add links for each node in prerequisiteNodes that doesn't have an isPrerequisiteTo link to this module
@@ -216,6 +226,7 @@ function ModuleModal({
       learnText: learnText,
       practiceText: practiceText,
       resources_array: resourcesArray,
+      isRooted: isModuleRooted
     };
 
     const newIsPrerequisiteToLinks = prerequisiteNodes.map((prereqNode) => {
