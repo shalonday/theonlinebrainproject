@@ -206,7 +206,7 @@ function getRootedNodes(nodeIdString, tree) {
     const idsArray = nodeIdString.split(",");
     let nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
     nodesArray = nodesArray.map(node => {
-      return {...node, isRooted: true}
+      return {...node, is_rooted: true}
     })
 
     return { nodes: nodesArray, links: [] };
