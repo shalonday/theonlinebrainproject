@@ -79,11 +79,61 @@ function Edit() {
   );
 
   async function handleSubmit() {
-    // validation?
-    // merge currentTree to database tree if validation passes
-    await mergeTree(currentTree);
-    //go back to Home page
-    navigate("/");
+    // !!! validation?
+    validateSubmittedTree(currentTree);
+
+   sendSubmissionToAdmin()
+    // //go back to Home page
+    // navigate("/");
+  } 
+
+  function validateSubmittedTree(tree){
+    if (!validateNoDisconnectedModuleNodes(tree)) alert('There are hanging module nodes. Please fix this')
+    if (!validateSkillNodes(tree)) alert('Some skill nodes seem to be duplicates of existing nodes')
+  }
+
+  function validateNoDisconnectedModuleNodes(tree){
+    let noDisconnectedModuleNodes = true
+    
+    // if there are any hanging module nodes, alert and fail validation immediately
+    const disconnectedNodeIdsArr = getDisconnectedNodes(tree)
+    const moduleNodesIdsArr = tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id)
+    
+    if (disconnectedNodeIdsArr.length > 0) { 
+      disconnectedNodeIdsArr.forEach(disconnectedNodeId => {
+      if (moduleNodesIdsArr.includes(disconnectedNodeId)) noDisconnectedModuleNodes = false;
+    })
+    }
+    
+    return noDisconnectedModuleNodes;
+  }
+
+  function validateSkillNodes(tree){
+    // !!!  // Hanging skill nodes should trigger an AlertDialog.
+    // hanging skill nodes' names should be listed to inform the user that they won't be added to the tree but instead requested to be linked to an existing node in the tree.
+    // !!! once I can incorporate NLP, check for duplicate skill nodes here
+    return false
+  }
+
+  function getDisconnectedNodes(tree){
+    // create set of sources and targets then compare this set with nodesSet. 
+    // if nodesSet contains nodes that are not in sources and targets, then those nodes are "disconnected", whereas "hanging" means that a node or branch is not connected to the main tree
+    const nodesSet = new Set(tree.nodes.map(node=> node.id))
+
+    const connectedNodesSet = new Set();
+    tree.links.forEach(link => {
+      connectedNodesSet.add(link.source)
+      connectedNodesSet.add(link.target)
+    })
+
+    let disconnectedNodesArr = [];
+    nodesSet.difference(connectedNodesSet).forEach(item => disconnectedNodesArr.push(item))
+    return disconnectedNodesArr
+  }
+
+  function sendSubmissionToAdmin(){
+     // !!! save submission to admin-access DB of submissions. (then create a dashboard for submissions for admin users)
+    
   }
 
   function handleDeleteClick() {
