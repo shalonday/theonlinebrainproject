@@ -34,6 +34,7 @@ import SaveAsDraftButton from "../components/edit/SaveAsDraftButton";
 import styled from "styled-components";
 import UpdateButton from "../components/edit/UpdateButton";
 import DeleteModal from "../components/edit/DeleteModal";
+import AlertDialog from "../components/AlertDialog";
 
 function Edit() {
   const { isLoading, universalTree, error } = useUniversalTree();
@@ -54,7 +55,9 @@ function Edit() {
   const [isAddingModule, setIsAddingModule] = useState(false); // true when the plus button was pressed. if true open an empty ModuleModal or with selectedNodes as preset prerequisites
   const [isUpdatingModule, setIsUpdatingModule] = useState(false); // true when Update button was clicked while a module is selected. if true open ModuleModal with preset values
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
+  const [disconnectedSkillNodeDescriptions, setDisconnectedSkillNodeDescriptions] = useState([])
+  
   useEffect(
     function () {
       async function setDisplayedTree() {
@@ -88,16 +91,14 @@ function Edit() {
   } 
 
   function validateSubmittedTree(tree){
-    if (!validateNoDisconnectedModuleNodes(tree)) alert('There are hanging module nodes. Please fix this')
-    if (!validateSkillNodes(tree)) alert('Some skill nodes seem to be duplicates of existing nodes')
+    const disconnectedNodeIdsArr = getDisconnectedNodes(tree);
+    if (!validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))) alert('There are hanging module nodes. Please fix this')
+    validateSkillNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'skill')) // alert('Some skill nodes seem to be duplicates of existing nodes')
   }
 
-  function validateNoDisconnectedModuleNodes(tree){
+  // if there are any hanging module nodes, alert and fail validation immediately
+  function validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, moduleNodesIdsArr){
     let noDisconnectedModuleNodes = true
-    
-    // if there are any hanging module nodes, alert and fail validation immediately
-    const disconnectedNodeIdsArr = getDisconnectedNodes(tree)
-    const moduleNodesIdsArr = tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id)
     
     if (disconnectedNodeIdsArr.length > 0) { 
       disconnectedNodeIdsArr.forEach(disconnectedNodeId => {
@@ -108,11 +109,12 @@ function Edit() {
     return noDisconnectedModuleNodes;
   }
 
-  function validateSkillNodes(tree){
-    // !!!  // Hanging skill nodes should trigger an AlertDialog.
+  function validateSkillNodes(disconnectedNodeIdsArr, skillNodesArr){
+    // !!! Hanging skill nodes should trigger an AlertDialog.
     // hanging skill nodes' names should be listed to inform the user that they won't be added to the tree but instead requested to be linked to an existing node in the tree.
+    alertUserAboutDisconnectedSkillNodes(disconnectedNodeIdsArr, skillNodesArr)
+
     // !!! once I can incorporate NLP, check for duplicate skill nodes here
-    return false
   }
 
   function getDisconnectedNodes(tree){
@@ -131,6 +133,25 @@ function Edit() {
     return disconnectedNodesArr
   }
 
+  // set up the AlertDialog that informs user of disconnected skill nodes being added to Requests
+  function alertUserAboutDisconnectedSkillNodes(disconnectedNodeIdsArr, skillNodesArr){
+    let disconnectedSkillNodesArr = []
+    
+    if (disconnectedNodeIdsArr.length > 0) { 
+      disconnectedNodeIdsArr.forEach(disconnectedNodeId => {
+      if (skillNodesArr.map(node => node.id).includes(disconnectedNodeId)) {
+        disconnectedSkillNodesArr.push(skillNodesArr.filter(node => node.id === disconnectedNodeId)[0])
+      }
+    })
+    }
+    if (disconnectedSkillNodesArr.length > 0){
+      const nodeDescriptionsArr = disconnectedSkillNodesArr.map(node => node.description)
+      setDisconnectedSkillNodeDescriptions(nodeDescriptionsArr)
+      setIsAlertDialogOpen(true)
+    }
+
+  }
+
   function sendSubmissionToAdmin(){
      // !!! save submission to admin-access DB of submissions. (then create a dashboard for submissions for admin users)
     
@@ -144,6 +165,17 @@ function Edit() {
   
   return (
     <>
+  {isAlertDialogOpen && <AlertDialog
+    open={isAlertDialogOpen}
+    setOpen={setIsAlertDialogOpen}
+    title="Warning"
+    negBtnText="No"
+    posBtnText="Yes"
+    onNegBtnClick={() => setIsAlertDialogOpen(false)}
+    onPosBtnClick={sendSubmissionToAdmin}>
+      The following skill nodes will be added to Requests because they are disconnected from the main tree. Is this what you want?
+      <br/>{disconnectedSkillNodeDescriptions.toString()}
+   </AlertDialog>}
       <div className={styles.inputDiv}>
         <input
           className={styles.input}
