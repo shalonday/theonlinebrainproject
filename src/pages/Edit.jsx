@@ -57,7 +57,8 @@ function Edit() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
   const [disconnectedSkillNodeDescriptions, setDisconnectedSkillNodeDescriptions] = useState([])
-  
+  const [areSkillNodesValid, setAreSkillNodesValid] = useState(false)
+
   useEffect(
     function () {
       async function setDisplayedTree() {
@@ -83,17 +84,18 @@ function Edit() {
 
   async function handleSubmit() {
     // !!! validation?
-    validateSubmittedTree(currentTree);
-
-   sendSubmissionToAdmin()
+    if (validateSubmittedTree(currentTree)) sendSubmissionToAdmin()
     // //go back to Home page
     // navigate("/");
   } 
 
   function validateSubmittedTree(tree){
     const disconnectedNodeIdsArr = getDisconnectedNodes(tree);
-    if (!validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))) alert('There are hanging module nodes. Please fix this')
-    validateSkillNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'skill')) // alert('Some skill nodes seem to be duplicates of existing nodes')
+    if (!validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))){ 
+      alert('There are hanging module nodes. Please fix this') // !!! switch to RHF eventually and encapsulate all error messages
+    }
+    validateSkillNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'skill'))
+    return validateNoDisconnectedModuleNodes && areSkillNodesValid
   }
 
   // if there are any hanging module nodes, alert and fail validation immediately
@@ -171,8 +173,13 @@ function Edit() {
     title="Warning"
     negBtnText="No"
     posBtnText="Yes"
-    onNegBtnClick={() => setIsAlertDialogOpen(false)}
-    onPosBtnClick={sendSubmissionToAdmin}>
+    onNegBtnClick={() => {
+      setIsAlertDialogOpen(false)
+      setAreSkillNodesValid(false)}}
+    onPosBtnClick={() =>{
+      setIsAlertDialogOpen(false)
+      setAreSkillNodesValid(true)
+    }}>
       The following skill nodes will be added to Requests because they are disconnected from the main tree. Is this what you want?
       <br/>{disconnectedSkillNodeDescriptions.toString()}
    </AlertDialog>}
