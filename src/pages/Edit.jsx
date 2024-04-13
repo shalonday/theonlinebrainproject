@@ -91,11 +91,12 @@ function Edit() {
 
   function validateSubmittedTree(tree){
     const disconnectedNodeIdsArr = getDisconnectedNodes(tree);
-    if (!validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))){ 
+    const areModuleNodesValid = validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))
+    if (!areModuleNodesValid){ 
       alert('There are hanging module nodes. Please fix this') // !!! switch to RHF eventually and encapsulate all error messages
     }
     validateSkillNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'skill'))
-    return validateNoDisconnectedModuleNodes && areSkillNodesValid
+    return areModuleNodesValid && areSkillNodesValid
   }
 
   // if there are any hanging module nodes, alert and fail validation immediately
@@ -115,7 +116,7 @@ function Edit() {
     // !!! Hanging skill nodes should trigger an AlertDialog.
     // hanging skill nodes' names should be listed to inform the user that they won't be added to the tree but instead requested to be linked to an existing node in the tree.
     alertUserAboutDisconnectedSkillNodes(disconnectedNodeIdsArr, skillNodesArr)
-
+    if (disconnectedSkillNodeDescriptions.length === 0) setAreSkillNodesValid(true)
     // !!! once I can incorporate NLP, check for duplicate skill nodes here
   }
 
