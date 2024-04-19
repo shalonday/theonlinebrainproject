@@ -2,24 +2,18 @@ import * as React from 'react';
 import { useUser } from "../../hooks/useUser";
 import MainButton from "../MainButton";
 import PropTypes from 'prop-types';
+import { useSave } from '../../hooks/useSave';
 
 export default function SubmitBranchButton(props){
-    const { user } = useUser();
-
+  
+  const {save} = useSave();
     async function handleSubmit(branch) {
         // !!! validation?
         console.log(validateSubmittedTree(branch))
         if (validateSubmittedTree(branch)) {
-          const statusSubmittedLinks = branch.links.map(link => { return user.id === link.author_id ? {...link, status: 'submitted'} : link})
-          const statusSubmittedNodes = branch.nodes.map(node => { return user.id === node.author_id ? {...node, status: 'submitted'} : node})
-          const branchSubmission = {nodes: statusSubmittedNodes, links: statusSubmittedLinks}
-          console.log(branch)
-          console.log(branchSubmission)
-          sendSubmissionToAdmin(branchSubmission)
-        }
-        // //go back to Home page
-        // navigate("/");
-      } 
+          save({...props.currentTree, branchTitle: props.branchTitle}, "submission")
+      }
+    } 
     
       function validateSubmittedTree(tree){
         const disconnectedNodeIdsArr = getDisconnectedNodes(tree);
@@ -85,11 +79,6 @@ export default function SubmitBranchButton(props){
           props.setIsAlertDialogOpen(true)
         }
     
-      }
-    
-      function sendSubmissionToAdmin(){
-         // !!! save submission to admin-access DB of submissions. (then create a dashboard for submissions for admin users)
-        
       }
 
       return  <MainButton onClick={()=>handleSubmit(props.currentTree)}>Submit</MainButton>
