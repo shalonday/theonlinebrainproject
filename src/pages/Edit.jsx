@@ -57,7 +57,7 @@ function Edit() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
   const [disconnectedSkillNodeDescriptions, setDisconnectedSkillNodeDescriptions] = useState([])
-  const [areSkillNodesValid, setAreSkillNodesValid] = useState(false)
+  const [areSkillNodesValid, setAreSkillNodesValid] = useState(true)
 
   useEffect(
     function () {
