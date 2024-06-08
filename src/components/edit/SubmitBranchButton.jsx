@@ -8,25 +8,27 @@ export default function SubmitBranchButton(props){
   
   const {save} = useSave();
     async function handleSubmit(branch) {
-        // !!! validation?
-        console.log(validateSubmittedTree(branch))
-        if (validateSubmittedTree(branch)) {
+        if (isSubmissionValid(branch)) {
           save({...props.currentTree, branchTitle: props.branchTitle}, "submission")
       }
     } 
     
-      function validateSubmittedTree(tree){
-        const disconnectedNodeIdsArr = getDisconnectedNodes(tree);
-        const areModuleNodesValid = validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))
-        if (!areModuleNodesValid){ 
+      function isSubmissionValid(branch){
+        const disconnectedNodeIdsArr = branch?.nodes?.filter(node => node.is_rooted === false).map(node => node.id) //getDisconnectedNodes(branch);
+        const areModulesValid = areModuleNodesValid(disconnectedNodeIdsArr, branch.nodes.filter(node => node.type === 'module').map(moduleNode => moduleNode.id))
+        
+        console.log(areModulesValid)
+        console.log(props.areSkillNodesValid)
+        if (!areModulesValid){ 
           alert('There are hanging module nodes. Please fix this') // !!! switch to RHF eventually and encapsulate all error messages
         }
-        validateSkillNodes(disconnectedNodeIdsArr, tree.nodes.filter(node => node.type === 'skill'))
-        return areModuleNodesValid && props.areSkillNodesValid
+
+        validateSkillNodes(disconnectedNodeIdsArr, branch.nodes.filter(node => node.type === 'skill'))
+        return areModulesValid && props.areSkillNodesValid
       }
     
       // if there are any hanging module nodes, alert and fail validation immediately
-      function validateNoDisconnectedModuleNodes(disconnectedNodeIdsArr, moduleNodesIdsArr){
+      function areModuleNodesValid(disconnectedNodeIdsArr, moduleNodesIdsArr){
         let noDisconnectedModuleNodes = true
         
         if (disconnectedNodeIdsArr.length > 0) { 
@@ -43,24 +45,26 @@ export default function SubmitBranchButton(props){
         // hanging skill nodes' names should be listed to inform the user that they won't be added to the tree but instead requested to be linked to an existing node in the tree.
         alertUserAboutDisconnectedSkillNodes(disconnectedNodeIdsArr, skillNodesArr)
         if (props.disconnectedSkillNodeDescriptions.length === 0) props.setAreSkillNodesValid(true)
-        // !!! once I can incorporate NLP, check for duplicate skill nodes here
+          // !!! once I can incorporate NLP, check for duplicate skill nodes here
       }
     
-      function getDisconnectedNodes(tree){
-        // create set of sources and targets then compare this set with nodesSet. 
-        // if nodesSet contains nodes that are not in sources and targets, then those nodes are "disconnected", whereas "hanging" means that a node or branch is not connected to the main tree
-        const nodesSet = new Set(tree.nodes.map(node=> node.id))
+      // function getDisconnectedNodes(tree){
+      //   // create set of sources and targets then compare this set with nodesSet. 
+      //   // if nodesSet contains nodes that are not in sources and targets, then those nodes are "disconnected", whereas "hanging" means that a node or branch is not connected to the main tree
+      //   const nodesSet = new Set(tree.nodes.map(node=> node.id))
+      //   let disconnectedNodesArr = [];
+        
+      //   console.log(tree)
     
-        const connectedNodesSet = new Set();
-        tree.links.forEach(link => {
-          connectedNodesSet.add(link.source)
-          connectedNodesSet.add(link.target)
-        })
+      //   const connectedNodesSet = new Set();
+      //   tree.links.forEach(link => {
+      //     connectedNodesSet.add(link.source)
+      //     connectedNodesSet.add(link.target)
+      //   })
     
-        let disconnectedNodesArr = [];
-        nodesSet.difference(connectedNodesSet).forEach(item => disconnectedNodesArr.push(item))
-        return disconnectedNodesArr
-      }
+      //   nodesSet.difference(connectedNodesSet).forEach(item => disconnectedNodesArr.push(item))
+      //   return disconnectedNodesArr
+      // }
     
       // set up the AlertDialog that informs user of disconnected skill nodes being added to Requests
       function alertUserAboutDisconnectedSkillNodes(disconnectedNodeIdsArr, skillNodesArr){
