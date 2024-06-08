@@ -3,9 +3,11 @@ import { useMutation } from "@tanstack/react-query";
 import { upsertDraftBranch, upsertDraftLinks, upsertDraftNodes } from "../services/apiBranches";
 import toast from "react-hot-toast";
 import { uuidv4 } from "../utils";
+import { useNavigate } from "react-router-dom";
 
 export function useSave(){
   const { user } = useUser();
+  const navigate = useNavigate();
 
   // mutate functions for upserting a branch draft
   const { mutateAsync: mutateDraftNodes, error: nodesError } = useMutation({
@@ -70,26 +72,27 @@ export function useSave(){
     } else if (saveType === 'submission'){
     // set nodes, links and branches to appropriate values
     const dividedBranch = divideBranchIntoRootedAndHanging(branch)
-    console.log(dividedBranch)
 
-    // !!! copypasted from old submission function
-    const statusSubmittedLinks = branch.links.map(link => { return user.id === link.author_id ? {...link, status: 'submitted'} : link})
-          const statusSubmittedNodes = branch.nodes.map(node => { return user.id === node.author_id ? {...node, status: 'submitted'} : node})
-          const branchSubmission = {nodes: statusSubmittedNodes, links: statusSubmittedLinks}
-          console.log(branch)
-          console.log(branchSubmission)
-          sendSubmissionToAdmin(branchSubmission)
+          // I believe this and the next line assumes that the node and link after ":" are unedited because they're by a different author and current user is not authorized to edit them.
+          linksToSave = dividedBranch.rootedBranch.links.map(link => { return user.id === link.author_id ? {...link, status: 'submitted'} : link}) 
+          nodesToSave = dividedBranch.rootedBranch.nodes.map(node => { return user.id === node.author_id ? {...node, status: 'submitted'} : node})
+          branchToSave = {
+          id: draftId ? draftId : uuidv4(),
+          title: branch.branchTitle,
+          nodeIds: nodesToSave.map((node) => node.id),
+          linkIds: linksToSave.map((link) => link.id),
+          author_id: user.id,
+          status: "submitted"
+        }
+          sendSubmissionToAdmin(branchToSave)
     }
-        // //go back to Home page
-        // navigate("/");
-
-        console.log(nodesToSave)
-        console.log(linksToSave)
-        console.log(branchToSave)
+        
         await mutateDraftNodes(nodesToSave);
         await mutateDraftLinks(linksToSave);
         await mutateDraftBranch(branchToSave);
     
+        //go back to Home page
+        navigate("/");
   }
 
 
