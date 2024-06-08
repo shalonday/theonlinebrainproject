@@ -31,16 +31,15 @@ export function useSave(){
    */
     // try to make this fit both the SaveAsDraft and the Submit btn?
   async function save(branch, saveType, draftId = '') {
-    console.log(draftId)
 
     let nodesToSave = []
     let linksToSave = []
-    let branchesToSave = []
+    let branchToSave;
 
     if (saveType==='draft'){
-    branchesToSave[0] = {
+    branchToSave = {
       id: draftId ? draftId : uuidv4(),
-      title: branch.title,
+      title: branch.branchTitle,
       nodeIds: branch.nodes.map((node) => node.id),
       linkIds: branch.links.map((link) => link.id),
       author_id: user.id,
@@ -61,7 +60,8 @@ export function useSave(){
       );
 
     nodesToSave = branch.nodes.filter(node => 
-      node.author_id === user.id
+      // node.author_id === user.id !!! temporarily set to true for testing; preexisting nodes don't have an author yet and won't pass this test.
+      true
     ).map((node) => {
       const { fx, fy, index, vx, vy, x, y, created_at, ...rest } = node;
       return rest; // remove keys that we don't want to save
@@ -69,7 +69,8 @@ export function useSave(){
 
     } else if (saveType === 'submission'){
     // set nodes, links and branches to appropriate values
-    divideBranchIntoRootedAndHanging(branch)
+    const dividedBranch = divideBranchIntoRootedAndHanging(branch)
+    console.log(dividedBranch)
 
     // !!! copypasted from old submission function
     const statusSubmittedLinks = branch.links.map(link => { return user.id === link.author_id ? {...link, status: 'submitted'} : link})
@@ -81,9 +82,13 @@ export function useSave(){
     }
         // //go back to Home page
         // navigate("/");
+
+        console.log(nodesToSave)
+        console.log(linksToSave)
+        console.log(branchToSave)
         await mutateDraftNodes(nodesToSave);
-    await mutateDraftLinks(linksToSave);
-    await mutateDraftBranch(branchesToSave);
+        await mutateDraftLinks(linksToSave);
+        await mutateDraftBranch(branchToSave);
     
   }
 
@@ -107,5 +112,6 @@ function sendSubmissionToAdmin(){
 *   one node that has isRooted===false and everything related to that node
 **/
 function divideBranchIntoRootedAndHanging(branch){
-  return {rootedBranch:{nodes:[], links:[]}, hangingBranches:[] }
+  // just a stub that returns the same branch as before, assuming it's all rooted
+  return {rootedBranch:{nodes:branch.nodes, links:branch.links}, hangingBranches:[] }
 }

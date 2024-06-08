@@ -8,7 +8,6 @@ function SaveAsDraftButton({ state = null, currentTree, branchTitle }) {
   const {save, nodesError, linksError, branchError} = useSave()
 
   async function handleSave() {
-    console.log(state?.draft?.id)
     save({...currentTree, branchTitle}, 'draft', state?.draft?.id)
     if (!nodesError && !linksError && !branchError) navigate("/profile");
   }
