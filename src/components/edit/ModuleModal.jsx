@@ -23,6 +23,7 @@ import MainTextSection from "./module-modal/MainTextSection";
 import { getObjectiveNodes, getPrerequisiteNodes, uuidv4 } from "../../utils";
 import Loader from "../Loader";
 import { useUser } from "../../hooks/useUser";
+import AlertDialog from "../AlertDialog";
 
 function ModuleModal({
   moduleToUpdate = null,
@@ -57,11 +58,21 @@ function ModuleModal({
   const [resourcesArray, setResourcesArray] = useState(
     moduleToUpdate?.resources_array ? moduleToUpdate.resources_array : []
   );
+
+  const isModuleRooted = prerequisiteNodes.some(node => node.is_rooted === true)
+
   const { user } = useUser();
+
+  const [errorMessage, setErrorMessage] = useState('')
 
   // Add module, skill nodes (prereq and objective), and links to currentTree
   function handleSubmit(e) {
     e.preventDefault();
+
+    const isSubmissionValid = validateSubmission();
+    if (!isSubmissionValid) {
+      return
+    }
 
     const newPrereqNodes = prerequisiteNodes.filter(
       (node) =>
@@ -70,12 +81,18 @@ function ModuleModal({
           .includes(node.id)
     );
 
-    const newTargetNodes = objectiveNodes.filter(
+    const newTargetNodes = objectiveNodes.filter( // filter the new nodes
       (node) =>
         !currentTree.nodes
           .map((existingNode) => existingNode.id)
           .includes(node.id)
-    );
+    ).map(node => { // add is_rooted property to new nodes. We assume that all preexisting objectiveNodes are already rooted (otherwise they wouldnt be in the universalTree)  
+      //if module is_rooted then ALL newTargetNodes is_rooted = true. 
+      return {...node, is_rooted:isModuleRooted}
+    });
+
+    console.log(isModuleRooted)
+    console.log(newTargetNodes)
 
     if (moduleToUpdate) {
       submitUpdatedModule(newPrereqNodes.concat(newTargetNodes));
@@ -87,6 +104,32 @@ function ModuleModal({
     setIsModuleModalVisible(false);
   }
 
+
+  function validateSubmission(){
+    setErrorMessage("")
+    let isValid = true;
+    
+    if (!prerequisiteNodes.length > 0){
+      isValid = false
+      setErrorMessage("There should be at least one prerequisite node.")
+      setIsAlertOpen(true)
+    }
+    
+    if (!objectiveNodes.length > 0){
+      isValid = false
+      setErrorMessage("There should be at least one objective node.")
+      setIsAlertOpen(true)
+    }
+    
+    if (learnText.length === 0 && practiceText.length === 0){
+      isValid = false
+      setErrorMessage("At least one of Learn and Practice should have text content.")
+      setIsAlertOpen(true)
+    }
+
+    return isValid
+  }
+
   function submitUpdatedModule(newNodes) {
     const moduleId = moduleToUpdate.id;
     const updatedModule = {
@@ -95,6 +138,7 @@ function ModuleModal({
       learnText: learnText,
       practiceText: practiceText,
       resources_array: resourcesArray,
+      is_rooted: isModuleRooted
     };
 
     // add links for each node in prerequisiteNodes that doesn't have an isPrerequisiteTo link to this module
@@ -157,13 +201,14 @@ function ModuleModal({
       isPrerequisiteToLinksToDelete.concat(teachesLinksToDelete);
 
     setCurrentTree((tree) => {
-      const newTree = {
+      const newTree = { 
+        ...tree, // any other keys within the tree should stay the same
         nodes: tree.nodes
           .map((node) => (node.id === moduleId ? updatedModule : node)) // add this updated module
           .concat(newNodes),
         links: tree.links
           .filter((link) => !linksToDelete.map((i) => i.id).includes(link.id))
-          .concat(newLinks),
+          .concat(newLinks)
       };
       return newTree;
     });
@@ -181,6 +226,7 @@ function ModuleModal({
       learnText: learnText,
       practiceText: practiceText,
       resources_array: resourcesArray,
+      is_rooted: isModuleRooted
     };
 
     const newIsPrerequisiteToLinks = prerequisiteNodes.map((prereqNode) => {
@@ -216,9 +262,10 @@ function ModuleModal({
     e.preventDefault();
     setIsModuleModalVisible(false);
   }
-
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
   return (
     <Suspense fallback={<Loader />}>
+      <AlertDialog open={isAlertOpen} setOpen={setIsAlertOpen} title="Error" negBtnText="Close" posBtnText="Ok" onNegBtnClick={()=>setIsAlertOpen(false)} onPosBtnClick={()=>setIsAlertOpen(false)}>Error: {errorMessage}</AlertDialog>
       <form className={styles.form}>
         <div className={styles.exitDiv}>
           <button onClick={handleExit} style={{ cursor: "pointer" }}>

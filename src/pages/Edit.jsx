@@ -21,7 +21,6 @@ import { useSkillTreesContext } from "../contexts/SkillTreesContext";
 import ModuleModal from "../components/edit/ModuleModal";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EditPageChart from "../components/edit/EditPageChart";
-import MainButton from "../components/MainButton";
 import Loader from "../components/Loader";
 import {
   getLinksByIdsArray,
@@ -34,6 +33,8 @@ import SaveAsDraftButton from "../components/edit/SaveAsDraftButton";
 import styled from "styled-components";
 import UpdateButton from "../components/edit/UpdateButton";
 import DeleteModal from "../components/edit/DeleteModal";
+import AlertDialog from "../components/AlertDialog";
+import SubmitBranchButton from "../components/edit/SubmitBranchButton";
 
 function Edit() {
   const { isLoading, universalTree, error } = useUniversalTree();
@@ -54,6 +55,9 @@ function Edit() {
   const [isAddingModule, setIsAddingModule] = useState(false); // true when the plus button was pressed. if true open an empty ModuleModal or with selectedNodes as preset prerequisites
   const [isUpdatingModule, setIsUpdatingModule] = useState(false); // true when Update button was clicked while a module is selected. if true open ModuleModal with preset values
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
+  const [disconnectedSkillNodeDescriptions, setDisconnectedSkillNodeDescriptions] = useState([])
+  const [areSkillNodesValid, setAreSkillNodesValid] = useState(true)
 
   useEffect(
     function () {
@@ -70,21 +74,13 @@ function Edit() {
           setCurrentTree(draftBranch);
         } else if (universalTree) {
           // set displayed tree to nodes in param
-          setCurrentTree(getNodesById(nodeIds, universalTree));
+          setCurrentTree(getRootedNodes(nodeIds, universalTree));
         }
       }
       setDisplayedTree();
     },
     [universalTree, nodeIds, state?.draft]
   );
-
-  async function handleSubmit() {
-    // validation?
-    // merge currentTree to database tree if validation passes
-    await mergeTree(currentTree);
-    //go back to Home page
-    navigate("/");
-  }
 
   function handleDeleteClick() {
     //open an alert or modal to ask user if they're sure because this will delete relationships too
@@ -94,6 +90,22 @@ function Edit() {
   
   return (
     <>
+  {isAlertDialogOpen && <AlertDialog
+    open={isAlertDialogOpen}
+    setOpen={setIsAlertDialogOpen}
+    title="Warning"
+    negBtnText="No"
+    posBtnText="Yes"
+    onNegBtnClick={() => {
+      setIsAlertDialogOpen(false)
+      setAreSkillNodesValid(false)}}
+    onPosBtnClick={() =>{
+      setIsAlertDialogOpen(false)
+      setAreSkillNodesValid(true)
+    }}>
+      The following skill nodes will be added to Requests because they are disconnected from the main tree. Is this what you want?
+      <br/>{disconnectedSkillNodeDescriptions.toString()}
+   </AlertDialog>}
       <div className={styles.inputDiv}>
         <input
           className={styles.input}
@@ -155,7 +167,15 @@ function Edit() {
               currentTree={currentTree}
               branchTitle={branchTitle}
             />
-            <MainButton onClick={handleSubmit}>Submit</MainButton>
+            <SubmitBranchButton
+              areSkillNodesValid={areSkillNodesValid}
+              setAreSkillNodesValid={setAreSkillNodesValid}
+              setDisconnectedSkillNodeDescriptions={setDisconnectedSkillNodeDescriptions}
+              setIsAlertDialogOpen={setIsAlertDialogOpen}
+              disconnectedSkillNodeDescriptions={disconnectedSkillNodeDescriptions}
+              state={state}
+              currentTree={currentTree}
+              branchTitle={branchTitle}/>
           </div>
         </div>
       </div>
@@ -201,14 +221,15 @@ const ToolButton = styled.button`
 `;
 
 // String, Tree -> Tree (nodes only)
-// get nodes by id without fetching from db
-function getNodesById(nodeIdString, tree) {
-  if (nodeIdString === "blank") return { nodes: [], links: [] };
-  else {
+// rooted nodes are nodes that are connected to the universalTree
+function getRootedNodes(nodeIdString, tree) {
     const idsArray = nodeIdString.split(",");
-    const nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
+    let nodesArray = tree.nodes.filter((node) => idsArray.includes(node.id));
+    nodesArray = nodesArray.map(node => {
+      return {...node, is_rooted: true}
+    })
+
     return { nodes: nodesArray, links: [] };
-  }
 }
 
 export default Edit;

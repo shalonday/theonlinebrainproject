@@ -35,8 +35,9 @@ function AddLinkModal({
   function handleSubmit(e) {
     e.preventDefault();
 
-    if (resourceType && price >= 0 && url) {
-      // required resources
+    const isSubmissionValid = validateResourceSubmission();
+
+    if (isSubmissionValid) {
       const resourceId = uuidv4();
       linkTextSetter(`[${linkText ? linkText : url}](${url})`);
       setResourcesArrayDependingOnType(resourceId);
@@ -44,6 +45,15 @@ function AddLinkModal({
     } else if (price < 0) {
       alert("Cannot accept a negative number for price");
     } else alert("Please fill in the required details");
+  }
+
+  function validateResourceSubmission(){
+    // required resources
+    // I feel like resource types for the Practice section should be different from
+    // in Learn section? TO DO.
+    let isResourceValid;
+    isResourceValid = resourceType && price >= 0 && url
+    return isResourceValid
   }
 
   function setResourcesArrayDependingOnType(resourceId) {
