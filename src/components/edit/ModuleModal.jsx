@@ -79,7 +79,9 @@ function ModuleModal({
         !currentTree.nodes
           .map((existingNode) => existingNode.id)
           .includes(node.id)
-    );
+    ).map(node => {
+      return {...node, is_rooted:false} // note that newly created prereqs are unrooted because they don't have a rooted node linking them to the world tree
+    });
 
     const newTargetNodes = objectiveNodes.filter( // filter the new nodes
       (node) =>
@@ -90,9 +92,6 @@ function ModuleModal({
       //if module is_rooted then ALL newTargetNodes is_rooted = true. 
       return {...node, is_rooted:isModuleRooted}
     });
-
-    console.log(isModuleRooted)
-    console.log(newTargetNodes)
 
     if (moduleToUpdate) {
       submitUpdatedModule(newPrereqNodes.concat(newTargetNodes));
