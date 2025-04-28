@@ -16,7 +16,7 @@ Brain Project. If not, see <https://www.gnu.org/licenses/>.
 */
 
 import styles from "./Search.module.css";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import SearchPageChart from "../components/search/SearchPageChart";
 import MainButton from "../components/MainButton";
@@ -24,7 +24,6 @@ import Loader from "../components/Loader";
 import { fetchUniversalTree } from "../services/apiTrees";
 import { useQuery } from "@tanstack/react-query";
 import NodeDescription from "../components/NodeDescription";
-import { buildParamStringFromArray } from "../utils";
 import SelectedNodesCard from "../components/search/SelectedNodesCard";
 import toast from "react-hot-toast";
 
@@ -88,15 +87,6 @@ function Search() {
           <MainButton onClick={handleGeneratePath} disabled={!currentNode}>
             Generate Path
           </MainButton>
-
-          <Link
-            to={`/edit/${buildParamStringFromArray(
-              selectedNodes.map((node) => node.id)
-            )}`}
-            className={styles.linkFlexItem}
-          >
-            <MainButton>Add a Branch</MainButton>
-          </Link>
         </div>
 
         <div className={styles.inputDiv}>
